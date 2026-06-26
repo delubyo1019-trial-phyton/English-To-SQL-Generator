@@ -305,40 +305,31 @@ hr { border-color: var(--border) !important; margin: 1.2rem 0 !important; }
 
 # ── Helper: render result card ───────────────────────────────────────────────
 def render_result_card(result: dict):
-    sql_escaped = html.escape(result["sql"] or "")
-    explanation = result["explanation"] or "No explanation returned."
     review = result["review"] or "No review returned."
     is_pass = "✅" in review
-
-    review_class = "sg-review-pass" if is_pass else "sg-review-fail"
-    review_icon = "✅" if is_pass else "⚠️"
-    review_label = "SELF-REVIEW — PASSED" if is_pass else "SELF-REVIEW — ISSUES FOUND"
 
     st.markdown(f"""
 <div class="sg-card">
     <div class="sg-q-label">▸ QUERY</div>
     <div class="sg-q-text">{html.escape(result['question'])}</div>
-
-    <div class="sg-sql-header">
-        <span class="sg-sql-label">Generated SQL</span>
-        <div class="sg-sql-line"></div>
-        <span class="sg-sql-tag">SNOWFLAKE · READ-ONLY</span>
-    </div>
-    <div class="sg-sql-block">{sql_escaped}</div>
-
-    <div class="sg-info-row">
-        <div class="sg-info-box">
-            <div class="sg-info-box-label">💬 Explanation</div>
-            <div class="sg-info-box-text">{html.escape(explanation)}</div>
-        </div>
-        <div class="sg-info-box {review_class}">
-            <div class="sg-info-box-label"><span class="sg-review-icon">{review_icon}</span>{review_label}</div>
-            <div class="sg-info-box-text">{html.escape(review)}</div>
-        </div>
-    </div>
 </div>
 """, unsafe_allow_html=True)
 
+    st.markdown('<div class="sg-sql-label" style="color:#00D4FF; font-family:monospace; font-size:0.72rem; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:0.3rem;">📝 Generated SQL</div>', unsafe_allow_html=True)
+    st.code(result["sql"] or "", language="sql")
+
+    col_exp, col_rev = st.columns([3, 2])
+    with col_exp:
+        st.markdown('<div class="sg-sql-label" style="color:#6B7FA3; font-family:monospace; font-size:0.72rem; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:0.3rem;">💬 Explanation</div>', unsafe_allow_html=True)
+        st.markdown(result["explanation"] or "No explanation returned.")
+    with col_rev:
+        st.markdown('<div class="sg-sql-label" style="color:#6B7FA3; font-family:monospace; font-size:0.72rem; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:0.3rem;">🔎 Self-Review</div>', unsafe_allow_html=True)
+        if is_pass:
+            st.success(review)
+        else:
+            st.warning(review)
+
+    st.divider()
 
 # ── API key ──────────────────────────────────────────────────────────────────
 api_key = os.getenv("GROQ_API_KEY")
